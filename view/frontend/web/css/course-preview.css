@@ -1,0 +1,40 @@
+.course-preview-wrapper {
+    margin-top: 20px;
+}
+
+.video-player-section {
+    margin-bottom: 20px;
+}
+
+iframe#youtube-video-player {
+    margin-bottom: 10px;
+    width: 100%;
+    max-width: 800px;
+    /*height: auto;*/
+}
+
+#video-info {
+    margin-top: 10px;
+}
+
+.video-playlist {
+    margin-top: 20px;
+}
+
+#video-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+#video-list li {
+    margin-bottom: 10px;
+}
+
+#video-list a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+#video-list a:hover {
+    text-decoration: underline;
+}

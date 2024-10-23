@@ -1,0 +1,22 @@
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <!-- Include CSS -->
+        <css src="CI_CoursePreview::css/course-preview.css"/>
+
+        <!-- Include JavaScript -->
+        <script src="CI_CoursePreview::js/course-preview.js"/>
+    </head>
+    <body>
+        <!--
+        <referenceContainer name="content">
+            <block class="CI\CoursePreview\Block\Product\CoursePreview" name="course.preview" template="CI_CoursePreview::course-preview.phtml"/>
+        </referenceContainer>
+        -->
+        
+        <referenceContainer name="product.info.main">
+            <block class="CI\CoursePreview\Block\Product\CoursePreview" name="course.preview" template="CI_CoursePreview::course-preview.phtml"/>
+        </referenceContainer>
+        
+    </body>
+</page>

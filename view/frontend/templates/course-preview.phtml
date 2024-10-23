@@ -1,0 +1,158 @@
+<?php
+// Get course previews data from the product
+$coursePreviews = $block->getCoursePreviews();
+
+// If you want to make it more readable, you can also use print_r()
+/*echo '<pre>';
+print_r($coursePreviews);
+echo '</pre>';
+
+echo $coursePreviews[0]['title'];
+echo $coursePreviews[0]['description'];
+echo $coursePreviews[0]['video_url'];
+echo $coursePreviews[0]['video_uploads'][0]['file']['url'];*/
+
+if (!empty($coursePreviews)) : ?>
+    <!-- "Watch Course Review" Button -->
+    <button id="watch-course-review-btn" class="watch-review-btn"><?php echo __('Watch Course Review'); ?></button>
+
+    <!-- Modal for Video Player -->
+    <div id="video-modal" class="video-modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+
+            <!-- Main Video Player Section -->
+            <div class="video-player-section">
+                <!-- HTML5 Video Player -->
+                <video id="html5-video-player" width="560" height="315" controls>
+                    <source id="video-source" src="<?php echo $coursePreviews[0]['video_uploads'][0]['file']['url']; ?>" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+
+                <!-- Video Title and Description -->
+                <div id="video-info">
+                    <h3 id="video-title"><?php echo $coursePreviews[0]['title']; ?></h3>
+                    <p id="video-description"><?php echo $coursePreviews[0]['description']; ?></p>
+                </div>
+            </div>
+
+            <!-- Video Playlist Section -->
+            <div class="video-playlist">
+                <h3><?php echo __('Free Sample Videos:'); ?></h3>
+                <ul id="video-list">
+                    <?php foreach ($coursePreviews as $index => $preview) : ?>
+                        <li>
+                            <a href="#" class="video-link" data-index="<?php echo $index; ?>" data-url="<?php echo $preview['video_uploads'][0]['file']['url']; ?>">
+                                <?php echo $preview['title']; ?>
+                            </a>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Style for the Modal */
+        .video-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 700px;
+            text-align: center;
+            position: relative;
+        }
+
+        .close-btn {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Style for Watch Review Button */
+        .watch-review-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .watch-review-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('video-modal');
+            const watchBtn = document.getElementById('watch-course-review-btn');
+            const closeModal = document.getElementsByClassName('close-btn')[0];
+            const videoList = document.querySelectorAll('.video-link');
+            const videoPlayer = document.getElementById('html5-video-player');
+            const videoSource = document.getElementById('video-source');
+            const videoTitle = document.getElementById('video-title');
+            const videoDescription = document.getElementById('video-description');
+            const videoData = <?php echo json_encode($coursePreviews); ?>;
+
+            // Open the modal when the button is clicked
+            watchBtn.onclick = function () {
+                modal.style.display = "flex";
+            }
+
+            // Close the modal only when the close button (X) is clicked
+            closeModal.onclick = function () {
+                modal.style.display = "none";
+                videoPlayer.pause(); // Pause the video when modal is closed
+            }
+
+            // Playlist Click Event
+            videoList.forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+
+                    const videoUrl = this.getAttribute('data-url');
+                    const videoIndex = this.getAttribute('data-index');
+
+                    // Update video source with new video URL
+                    videoSource.src = videoUrl;
+                    videoPlayer.load(); // Reload the video player with the new source
+
+                    // Update title and description
+                    videoTitle.textContent = videoData[videoIndex].title;
+                    videoDescription.textContent = videoData[videoIndex].description;
+
+                    // Play the newly loaded video
+                    videoPlayer.play();
+                });
+            });
+        });
+    </script>
+<?php else : ?>
+    <p><?php echo __('Course Preview is currently disabled.'); ?></p>
+<?php endif; ?>
