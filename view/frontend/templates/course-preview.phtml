@@ -2,49 +2,98 @@
 // Get course previews data from the product
 $coursePreviews = $block->getCoursePreviews();
 
+// Get product name to display as Course Name
+$productName = $block->getProduct()->getName(); // Get the product name as the course name
+
+
 // If you want to make it more readable, you can also use print_r()
 /*echo '<pre>';
 print_r($coursePreviews);
-echo '</pre>';
+echo '</pre>';*/
 
+/*
 echo $coursePreviews[0]['title'];
 echo $coursePreviews[0]['description'];
 echo $coursePreviews[0]['video_url'];
 echo $coursePreviews[0]['video_uploads'][0]['file']['url'];*/
 
-if (!empty($coursePreviews)) : ?>
+
+
+// Initialize variables to store the first valid video
+$firstValidVideoUrl = '';
+$firstValidVideoTitle = '';
+$firstValidVideoDescription = '';
+
+// Check if there is any valid video available in the array
+$hasValidVideo = false;
+$validPreviews = [];
+
+// Collect valid previews that are enabled
+if (!empty($coursePreviews)) {
+    foreach ($coursePreviews as $preview) {
+        // Only process previews with 'enabled' status
+        if (isset($preview['status']) && $preview['status'] == '1') {
+            // Check if there is a valid video (either video_uploads or video_url)
+            if (!empty($preview['video_uploads'][0]['file']['url']) || !empty($preview['video_url'])) {
+                $validPreviews[] = $preview; // Add valid previews to the list
+                $hasValidVideo = true;
+            }
+        }
+    }
+
+    // Set the first valid video information
+    if ($hasValidVideo) {
+        $firstValidVideo = $validPreviews[0]; // Get the first valid preview
+        $firstValidVideoUrl = !empty($firstValidVideo['video_uploads'][0]['file']['url']) ? $firstValidVideo['video_uploads'][0]['file']['url'] : $firstValidVideo['video_url'];
+        $firstValidVideoTitle = !empty($firstValidVideo['title']) ? $firstValidVideo['title'] : 'Untitled';
+        $firstValidVideoDescription = !empty($firstValidVideo['description']) ? $firstValidVideo['description'] : 'No description available';
+    }
+}
+
+if ($hasValidVideo) : ?>
     <!-- "Watch Course Review" Button -->
-    <button id="watch-course-review-btn" class="watch-review-btn"><?php echo __('Watch Course Review'); ?></button>
+    <button id="watch-course-review-btn" class="watch-review-btn"><?php echo __('Watch Course Preview'); ?></button>
 
     <!-- Modal for Video Player -->
-    <div id="video-modal" class="video-modal">
+    <div id="video-modal" class="video-modal previewpopup">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
+
+            <!-- Display the Course Name (Product Name) -->
+            <h3>Course Preview</h3>
+            <h4><?php echo $productName; ?></h4>
 
             <!-- Main Video Player Section -->
             <div class="video-player-section">
                 <!-- HTML5 Video Player -->
-                <video id="html5-video-player" width="560" height="315" controls>
-                    <source id="video-source" src="<?php echo $coursePreviews[0]['video_uploads'][0]['file']['url']; ?>" type="video/mp4">
+                <video id="html5-video-player" controls>
+                    <source id="video-source" src="" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
 
                 <!-- Video Title and Description -->
                 <div id="video-info">
-                    <h3 id="video-title"><?php echo $coursePreviews[0]['title']; ?></h3>
-                    <p id="video-description"><?php echo $coursePreviews[0]['description']; ?></p>
+                    <h3 id="video-title"></h3>
+                    <p id="video-description"></p>
                 </div>
             </div>
 
             <!-- Video Playlist Section -->
-            <div class="video-playlist">
+            <div class="video-playlist-wrapper">
                 <h3><?php echo __('Free Sample Videos:'); ?></h3>
-                <ul id="video-list">
-                    <?php foreach ($coursePreviews as $index => $preview) : ?>
-                        <li>
-                            <a href="#" class="video-link" data-index="<?php echo $index; ?>" data-url="<?php echo $preview['video_uploads'][0]['file']['url']; ?>">
-                                <?php echo $preview['title']; ?>
+                <ul id="video-list" class="video-list">
+                    <?php foreach ($validPreviews as $index => $preview) :
+                        $videoUrl = !empty($preview['video_uploads'][0]['file']['url']) 
+                                    ? $preview['video_uploads'][0]['file']['url'] 
+                                    : $preview['video_url'];
+                    ?>
+                        <li class="video-item" data-index="<?php echo $index; ?>">
+                            <a href="#" class="video-link" data-index="<?php echo $index; ?>" data-url="<?php echo $videoUrl; ?>">
+                                <!-- Add play icon -->
+                                <i class="fa fa-play-circle" aria-hidden="true"></i>
+                                <?php echo !empty($preview['title']) ? $preview['title'] : 'Untitled'; ?>
                             </a>
+                            <span class="video-duration" id="duration-<?php echo $index; ?>"></span> <!-- Placeholder for video duration -->
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -63,18 +112,19 @@ if (!empty($coursePreviews)) : ?>
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.8);
-            justify-content: center;
+            justify-content: left;
             align-items: center;
         }
 
         .modal-content {
-            background-color: #fefefe;
+            background-color: #2d2f31;
+            color: #fff;
             margin: auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 80%;
+            width: 100%;
             max-width: 700px;
-            text-align: center;
+            text-align: left;
             position: relative;
         }
 
@@ -106,6 +156,78 @@ if (!empty($coursePreviews)) : ?>
         .watch-review-btn:hover {
             background-color: #0056b3;
         }
+
+        .previewpopup h3 {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .previewpopup h4 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: block;
+            clear: both;
+        }
+
+        #video-info p {
+            font-size: 14px;
+            color: #efefef;
+        }
+
+        .video-playlist-wrapper {
+            overflow: hidden; /* Hide scrollbar */
+            max-height: 200px; /* Adjust the height as needed */
+        }
+
+        #video-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #video-list li {
+            background-color: #3e4143;
+            margin-bottom: 1px;
+            color: #fff;
+            border: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #2d2f31;
+            padding: 1.6rem 2.4rem;
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        #video-list li.playing {
+            background-color: #007bff;
+        }
+
+        #video-list li a {
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: 0px;
+            font-size: 1.4rem;
+            color:#fff;
+            text-decoration:none;
+            display: flex;
+            align-items: center;
+        }
+
+        #video-list li a i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        #video-list li a:hover {
+            text-decoration:none;
+        }
+
+        /* Duration style */
+        .video-duration {
+            font-size: 1.2rem;
+            color: #aaa;
+        }
     </style>
 
     <script>
@@ -114,22 +236,43 @@ if (!empty($coursePreviews)) : ?>
             const watchBtn = document.getElementById('watch-course-review-btn');
             const closeModal = document.getElementsByClassName('close-btn')[0];
             const videoList = document.querySelectorAll('.video-link');
+            const videoItems = document.querySelectorAll('.video-item');
             const videoPlayer = document.getElementById('html5-video-player');
             const videoSource = document.getElementById('video-source');
             const videoTitle = document.getElementById('video-title');
             const videoDescription = document.getElementById('video-description');
-            const videoData = <?php echo json_encode($coursePreviews); ?>;
+            const videoData = <?php echo json_encode($validPreviews); ?>;
+            let currentPlayingIndex = 0;
+
+            // Add 'playing' class to the currently playing video
+            function updatePlayingClass(index) {
+                videoItems.forEach((item) => item.classList.remove('playing'));
+                document.querySelector(`.video-item[data-index="${index}"]`).classList.add('playing');
+            }
+
+            // Set initial video as playing
+            updatePlayingClass(currentPlayingIndex);
 
             // Open the modal when the button is clicked
             watchBtn.onclick = function () {
+                // Initialize modal with the first valid video
+                const firstValidVideoUrl = videoData[currentPlayingIndex].video_uploads?.[0]?.file?.url || videoData[currentPlayingIndex].video_url || '#';
+                const firstValidVideoTitle = videoData[currentPlayingIndex].title || 'Untitled';
+                const firstValidVideoDescription = videoData[currentPlayingIndex].description || 'No description available';
+
+                videoSource.src = firstValidVideoUrl;
+                videoPlayer.load(); // Ensure video player loads the video
+                videoTitle.textContent = firstValidVideoTitle;
+                videoDescription.textContent = firstValidVideoDescription;
+
                 modal.style.display = "flex";
-            }
+            };
 
             // Close the modal only when the close button (X) is clicked
             closeModal.onclick = function () {
                 modal.style.display = "none";
                 videoPlayer.pause(); // Pause the video when modal is closed
-            }
+            };
 
             // Playlist Click Event
             videoList.forEach(function (link) {
@@ -144,15 +287,59 @@ if (!empty($coursePreviews)) : ?>
                     videoPlayer.load(); // Reload the video player with the new source
 
                     // Update title and description
-                    videoTitle.textContent = videoData[videoIndex].title;
-                    videoDescription.textContent = videoData[videoIndex].description;
+                    videoTitle.textContent = videoData[videoIndex].title || 'Untitled';
+                    videoDescription.textContent = videoData[videoIndex].description || 'No description available';
+
+                    // Update playing class
+                    updatePlayingClass(videoIndex);
 
                     // Play the newly loaded video
                     videoPlayer.play();
                 });
             });
+
+            // Implement smooth scrolling for the playlist
+            const videoPlaylistWrapper = document.querySelector('.video-playlist-wrapper');
+            let isMouseOver = false;
+            let scrollAmount = 0;
+
+            videoPlaylistWrapper.addEventListener('mouseenter', function() {
+                isMouseOver = true;
+            });
+
+            videoPlaylistWrapper.addEventListener('mouseleave', function() {
+                isMouseOver = false;
+            });
+
+            videoPlaylistWrapper.addEventListener('mousemove', function(e) {
+                if (isMouseOver) {
+                    const wrapperHeight = videoPlaylistWrapper.clientHeight;
+                    const scrollHeight = videoPlaylistWrapper.scrollHeight;
+                    const offsetY = e.clientY - videoPlaylistWrapper.getBoundingClientRect().top;
+                    scrollAmount = (offsetY / wrapperHeight) * (scrollHeight - wrapperHeight);
+                    videoPlaylistWrapper.scrollTop = scrollAmount;
+                }
+            });
+
+            // Fetch and display video durations
+            videoItems.forEach((item, index) => {
+                const videoUrl = item.querySelector('.video-link').getAttribute('data-url');
+                const videoElement = document.createElement('video');
+                videoElement.src = videoUrl;
+                videoElement.addEventListener('loadedmetadata', function () {
+                    const duration = formatTime(videoElement.duration);
+                    document.getElementById(`duration-${index}`).textContent = duration;
+                });
+            });
+
+            // Helper function to format the video time into mm:ss format
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
         });
     </script>
 <?php else : ?>
-    <p><?php echo __('Course Preview is currently disabled.'); ?></p>
+    <p><?php echo __('No course previews are available.'); ?></p>
 <?php endif; ?>

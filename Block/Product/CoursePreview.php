@@ -45,7 +45,7 @@ class CoursePreview extends Template
     public function getCoursePreviews()
     {
         // Add log to check if the block is being called
-        $this->logger->info('Course Preview Block Called');
+        //$this->logger->info('Course Preview Block Called');
 
         // Check if the Course Preview module is enabled in the system configuration
         if (!$this->coursePreviewHelper->isModuleEnabled()) {
@@ -58,7 +58,7 @@ class CoursePreview extends Template
 
         // Log the retrieved course previews data from the product
         if ($coursePreviews) {
-            $this->logger->info('Course Previews Data: ' . json_encode($coursePreviews));
+            //$this->logger->info('Course Previews Data: ' . json_encode($coursePreviews));
             return json_decode($coursePreviews, true);
         } else {
             $this->logger->info('No Course Previews Data found');
@@ -75,7 +75,7 @@ class CoursePreview extends Template
     public function getProduct()
     {
         // Add log to verify if the product is loaded
-        $this->logger->info('Fetching the Current Product');
+        //$this->logger->info('Fetching the Current Product');
 
         return $this->registry->registry('current_product');
     }

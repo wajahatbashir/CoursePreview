@@ -3,7 +3,7 @@
     <system>
         <section id="coursepreview" translate="label" type="text" sortOrder="500" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Course Preview</label>
-            <tab>cloudinstitute</tab>
+            <tab>general</tab>
             <resource>CI_CoursePreview::config</resource>
             <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>General Settings</label>

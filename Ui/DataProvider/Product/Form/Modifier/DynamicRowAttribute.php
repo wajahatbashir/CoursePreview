@@ -103,7 +103,8 @@ class DynamicRowAttribute extends AbstractModifier
         );
     
         if ($coursePreviewsPath) {
-           // $this->logger->info('Course Previews Path Found: ' . $coursePreviewsPath);
+
+           //$this->logger->info('Course Previews Path Found: ' . $coursePreviewsPath);
     
             // Merge and update meta with the dynamic row field structure
             $meta = $this->arrayManager->merge(
@@ -153,6 +154,9 @@ class DynamicRowAttribute extends AbstractModifier
                         'deleteValue' => '1',
                         'renderDefaultRecord' => false,
                         'sortOrder' => $sortOrder,
+                        'dndConfig' => [ // Enable drag and drop
+                            'enabled' => true
+                        ],
                     ],
                 ],
             ],
@@ -177,7 +181,7 @@ class DynamicRowAttribute extends AbstractModifier
                                         'componentType' => Field::NAME,
                                         'formElement' => Input::NAME,
                                         'dataType' => Text::NAME,
-                                        'label' => __('Video Title'),
+                                        'label' => __('Title'),
                                         'dataScope' => 'title',
                                         'sortOrder' => 10,
                                         'validation' => [
@@ -192,9 +196,9 @@ class DynamicRowAttribute extends AbstractModifier
                                 'data' => [
                                     'config' => [
                                         'componentType' => Field::NAME,
-                                        'formElement' => Input::NAME,
+                                        'formElement' => \Magento\Ui\Component\Form\Element\Textarea::NAME, // Change to textarea
                                         'dataType' => Text::NAME,
-                                        'label' => __('Video Description'),
+                                        'label' => __('Description'),
                                         'dataScope' => 'description',
                                         'sortOrder' => 20,
                                     ],
@@ -222,14 +226,39 @@ class DynamicRowAttribute extends AbstractModifier
                                         'componentType' => 'field',
                                         'formElement' => 'fileUploader',
                                         'dataType' => 'text',
-                                        'label' => __('Media Uploads'),
+                                        'label' => __('Media Upload'),
                                         'dataScope' => 'video_uploads',
                                         'uploaderConfig' => [
                                             'url' => $this->urlBuilder->getUrl('ci_coursepreview/media/upload'), // Ensure this points to your custom upload controller
                                         ],
                                         'allowedExtensions' => ['mp4', 'avi', 'mkv', 'jpg', 'jpeg', 'png', 'gif'], // Supporting both videos and images
                                         'maxFileSize' => 1024 * 1000 * 1000, // 1GB max file size for large video uploads
-                                        'sortOrder' => 50,
+                                        'sortOrder' => 40,
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'status' => [
+                            'arguments' => [
+                                'data' => [
+                                    'config' => [
+                                        'componentType' => Field::NAME,
+                                        'formElement' => 'select', // This is the dropdown element type
+                                        'dataType' => Text::NAME,
+                                        'label' => __('Status'),
+                                        'dataScope' => 'status',
+                                        'sortOrder' => 50, // Sort order relative to other fields
+                                        'options' => [
+                                            [
+                                                'label' => __('Enable'),
+                                                'value' => '1'  // Enable value
+                                            ],
+                                            [
+                                                'label' => __('Disable'),
+                                                'value' => '0'  // Disable value
+                                            ]
+                                        ],
+                                        'default' => '1', // Default value to be set as "Enable"
                                     ],
                                 ],
                             ],
@@ -270,8 +299,8 @@ class DynamicRowAttribute extends AbstractModifier
                         'renderDefaultRecord' => false,
                         'recordTemplate' => 'record',
                         'dataScope' => '',
-                        'dndConfig' => [
-                            'enabled' => false,
+                        'dndConfig' => [ // Enable drag and drop
+                            'enabled' => true
                         ],
                         'disabled' => false,
                         'sortOrder' => $this->arrayManager->get($coursePreviewsPath . '/arguments/data/config/sortOrder', $meta),
@@ -299,7 +328,7 @@ class DynamicRowAttribute extends AbstractModifier
                                         'formElement' => Input::NAME,
                                         'componentType' => Field::NAME,
                                         'dataType' => Text::NAME,
-                                        'label' => __('Video Title'),
+                                        'label' => __('Title'),
                                         'dataScope' => 'title',
                                     ],
                                 ],
@@ -309,10 +338,10 @@ class DynamicRowAttribute extends AbstractModifier
                             'arguments' => [
                                 'data' => [
                                     'config' => [
-                                        'formElement' => Input::NAME,
                                         'componentType' => Field::NAME,
+                                        'formElement' => \Magento\Ui\Component\Form\Element\Textarea::NAME, // Change to textarea
                                         'dataType' => Text::NAME,
-                                        'label' => __('Video Description'),
+                                        'label' => __('Description'),
                                         'dataScope' => 'description',
                                     ],
                                 ],
@@ -338,13 +367,37 @@ class DynamicRowAttribute extends AbstractModifier
                                         'componentType' => 'field',
                                         'formElement' => 'fileUploader',
                                         'dataType' => 'text',
-                                        'label' => __('Media Uploads'),
+                                        'label' => __('Media Upload'),
                                         'dataScope' => 'video_uploads',
                                         'uploaderConfig' => [
                                             'url' => $this->urlBuilder->getUrl('ci_coursepreview/media/upload'), // Ensure this points to your custom upload controller
                                         ],
                                         'allowedExtensions' => ['mp4', 'avi', 'mkv', 'jpg', 'jpeg', 'png', 'gif'], // Supporting both videos and images
                                         'maxFileSize' => 1024 * 1000 * 1000, // 1GB max file size for large video uploads
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'status' => [
+                            'arguments' => [
+                                'data' => [
+                                    'config' => [
+                                        'componentType' => Field::NAME,
+                                        'formElement' => 'select', // This is the dropdown element type
+                                        'dataType' => Text::NAME,
+                                        'label' => __('Status'),
+                                        'dataScope' => 'status',
+                                        'options' => [
+                                            [
+                                                'label' => __('Enable'),
+                                                'value' => '1'  // Enable value
+                                            ],
+                                            [
+                                                'label' => __('Disable'),
+                                                'value' => '0'  // Disable value
+                                            ]
+                                        ],
+                                        'default' => '1', // Default value to be set as "Enable"
                                     ],
                                 ],
                             ],

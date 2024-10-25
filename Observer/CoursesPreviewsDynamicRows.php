@@ -11,28 +11,10 @@ use Psr\Log\LoggerInterface;
 
 class CoursesPreviewsDynamicRows implements ObserverInterface
 {
-    /**
-     * @var RequestInterface
-     */
     protected $request;
-
-    /**
-     * @var SerializerInterface
-     */
     protected $serializer;
-
-    /**
-     * @var LoggerInterface
-     */
     protected $logger;
 
-    /**
-     * Constructor
-     *
-     * @param RequestInterface $request
-     * @param SerializerInterface $serializer
-     * @param LoggerInterface $logger
-     */
     public function __construct(
         RequestInterface $request,
         SerializerInterface $serializer,
@@ -43,17 +25,13 @@ class CoursesPreviewsDynamicRows implements ObserverInterface
         $this->logger = $logger;
     }
 
-    /**
-     * Execute the observer
-     *
-     * @param Observer $observer
-     * @return void
-     */
     public function execute(Observer $observer)
     {
-        /** @var \Magento\Catalog\Model\Product $product */
         $product = $observer->getEvent()->getDataObject();
         $postData = $this->request->getPostValue('product', []);
+
+        // Log the incoming post data for debugging
+        //$this->logger->info('Post Data: ' . json_encode($postData));
 
         $coursePreviews = $postData[DynamicRowAttribute::PRODUCT_ATTRIBUTE_CODE] ?? null;
 
@@ -61,34 +39,45 @@ class CoursesPreviewsDynamicRows implements ObserverInterface
         //$this->logger->info('Course Previews Data: ' . json_encode($coursePreviews));
 
         if ($coursePreviews) {
-            $requiredParams = ['title', 'description', 'video_url', 'video_upload'];
+            $requiredParams = ['title']; // Remove 'description' from requiredParams
 
             if (is_array($coursePreviews)) {
+                // Adjusted the filtering logic to allow empty description but ensure video_url or video_uploads must exist
                 $coursePreviews = $this->removeEmptyEntries($coursePreviews, $requiredParams);
-                $product->setData(
-                    DynamicRowAttribute::PRODUCT_ATTRIBUTE_CODE,
-                    $this->serializer->serialize($coursePreviews)
-                );
+
+                // Log the filtered data to check if entries are being removed correctly
+                //$this->logger->info('Filtered Course Previews: ' . json_encode($coursePreviews));
+
+                if (!empty($coursePreviews)) {
+                    $product->setData(
+                        DynamicRowAttribute::PRODUCT_ATTRIBUTE_CODE,
+                        $this->serializer->serialize($coursePreviews)
+                    );
+                } else {
+                    $this->logger->info('No valid Course Previews left after filtering.');
+                    $product->setData(DynamicRowAttribute::PRODUCT_ATTRIBUTE_CODE, null);
+                }
             }
         } else {
+            $this->logger->info('No Course Previews found in post data.');
             $product->setData(DynamicRowAttribute::PRODUCT_ATTRIBUTE_CODE, null);
         }
     }
 
-    /**
-     * Remove empty arrays from the multi-dimensional array
-     *
-     * @param array $coursePreviews
-     * @param array $requiredParams
-     * @return array
-     */
     private function removeEmptyEntries(array $coursePreviews, array $requiredParams): array
     {
         $requiredParams = array_flip($requiredParams);
 
         foreach ($coursePreviews as $key => $values) {
             $values = array_filter($values);
-            if (count(array_intersect_key($values, $requiredParams)) !== count($requiredParams)) {
+
+            // Ensure either video_url or video_uploads must exist along with title (description can be empty)
+            $hasVideoUrl = !empty($values['video_url']);
+            $hasVideoUploads = !empty($values['video_uploads']);
+
+            // Only remove the entry if title is missing or neither video_url nor video_uploads are provided
+            if (count(array_intersect_key($values, $requiredParams)) !== count($requiredParams) || (!$hasVideoUrl && !$hasVideoUploads)) {
+                $this->logger->info('Removing incomplete Course Preview entry: ' . json_encode($values));
                 unset($coursePreviews[$key]);
             }
         }
