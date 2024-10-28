@@ -19,13 +19,6 @@ echo $coursePreviews[0]['video_uploads'][0]['file']['url'];*/
 
 
 
-
-// Check if the module is enabled and course previews data is available
-if ($coursePreviews === null) {
-    // Exit if the module is disabled or there are no course previews
-    return;
-}
-
 // Initialize variables to store the first valid video
 $firstValidVideoUrl = '';
 $firstValidVideoTitle = '';
@@ -41,7 +34,7 @@ if (!empty($coursePreviews)) {
         // Only process previews with 'enabled' status
         if (isset($preview['status']) && $preview['status'] == '1') {
             // Check if there is a valid video (either video_uploads or video_url)
-            if (!empty($preview['video_uploads'][0]['url']) || !empty($preview['video_url'])) {
+            if (!empty($preview['video_uploads'][0]['file']['url']) || !empty($preview['video_url'])) {
                 $validPreviews[] = $preview; // Add valid previews to the list
                 $hasValidVideo = true;
             }
@@ -51,7 +44,7 @@ if (!empty($coursePreviews)) {
     // Set the first valid video information
     if ($hasValidVideo) {
         $firstValidVideo = $validPreviews[0]; // Get the first valid preview
-        $firstValidVideoUrl = !empty($firstValidVideo['video_uploads'][0]['url']) ? $firstValidVideo['video_uploads'][0]['url'] : $firstValidVideo['video_url'];
+        $firstValidVideoUrl = !empty($firstValidVideo['video_uploads'][0]['file']['url']) ? $firstValidVideo['video_uploads'][0]['file']['url'] : $firstValidVideo['video_url'];
         $firstValidVideoTitle = !empty($firstValidVideo['title']) ? $firstValidVideo['title'] : 'Untitled';
         $firstValidVideoDescription = !empty($firstValidVideo['description']) ? $firstValidVideo['description'] : 'No description available';
     }
@@ -108,6 +101,135 @@ if ($hasValidVideo) : ?>
         </div>
     </div>
 
+    <style>
+        /* Style for the Modal */
+        .video-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: left;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #2d2f31;
+            color: #fff;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 100%;
+            max-width: 700px;
+            text-align: left;
+            position: relative;
+        }
+
+        .close-btn {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Style for Watch Review Button */
+        .watch-review-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .watch-review-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .previewpopup h3 {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .previewpopup h4 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: block;
+            clear: both;
+        }
+
+        #video-info p {
+            font-size: 14px;
+            color: #efefef;
+        }
+
+        .video-playlist-wrapper {
+            overflow: hidden; /* Hide scrollbar */
+            max-height: 200px; /* Adjust the height as needed */
+        }
+
+        #video-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #video-list li {
+            background-color: #3e4143;
+            margin-bottom: 1px;
+            color: #fff;
+            border: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #2d2f31;
+            padding: 1.6rem 2.4rem;
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        #video-list li.playing {
+            background-color: #007bff;
+        }
+
+        #video-list li a {
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: 0px;
+            font-size: 1.4rem;
+            color:#fff;
+            text-decoration:none;
+            display: flex;
+            align-items: center;
+        }
+
+        #video-list li a i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        #video-list li a:hover {
+            text-decoration:none;
+        }
+
+        /* Duration style */
+        .video-duration {
+            font-size: 1.2rem;
+            color: #aaa;
+        }
+    </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById('video-modal');
@@ -122,31 +244,27 @@ if ($hasValidVideo) : ?>
             const videoData = <?php echo json_encode($validPreviews); ?>;
             let currentPlayingIndex = 0;
 
-            // Function to set video source, title, and description
-            function loadVideo(index) {
-                const videoUrl = videoData[index].video_uploads?.[0]?.url || videoData[index].video_url || '';
-                const videoTitleText = videoData[index].title || 'Untitled';
-                const videoDescriptionText = videoData[index].description || 'No description available';
-
-                videoSource.src = videoUrl;
-                videoPlayer.load(); // Ensure video player loads the video
-                videoTitle.textContent = videoTitleText;
-                videoDescription.textContent = videoDescriptionText;
-                updatePlayingClass(index); // Update the playing class for the playlist item
-
-                // Play the newly loaded video
-                videoPlayer.play();
-            }
-
             // Add 'playing' class to the currently playing video
             function updatePlayingClass(index) {
                 videoItems.forEach((item) => item.classList.remove('playing'));
                 document.querySelector(`.video-item[data-index="${index}"]`).classList.add('playing');
             }
 
+            // Set initial video as playing
+            updatePlayingClass(currentPlayingIndex);
+
             // Open the modal when the button is clicked
             watchBtn.onclick = function () {
-                loadVideo(currentPlayingIndex);
+                // Initialize modal with the first valid video
+                const firstValidVideoUrl = videoData[currentPlayingIndex].video_uploads?.[0]?.file?.url || videoData[currentPlayingIndex].video_url || '#';
+                const firstValidVideoTitle = videoData[currentPlayingIndex].title || 'Untitled';
+                const firstValidVideoDescription = videoData[currentPlayingIndex].description || 'No description available';
+
+                videoSource.src = firstValidVideoUrl;
+                videoPlayer.load(); // Ensure video player loads the video
+                videoTitle.textContent = firstValidVideoTitle;
+                videoDescription.textContent = firstValidVideoDescription;
+
                 modal.style.display = "flex";
             };
 
@@ -157,15 +275,30 @@ if ($hasValidVideo) : ?>
             };
 
             // Playlist Click Event
-            videoList.forEach(function (link, index) {
+            videoList.forEach(function (link) {
                 link.addEventListener('click', function (event) {
                     event.preventDefault();
-                    currentPlayingIndex = index; // Set the current playing index to the clicked video
-                    loadVideo(currentPlayingIndex);
+
+                    const videoUrl = this.getAttribute('data-url');
+                    const videoIndex = this.getAttribute('data-index');
+
+                    // Update video source with new video URL
+                    videoSource.src = videoUrl;
+                    videoPlayer.load(); // Reload the video player with the new source
+
+                    // Update title and description
+                    videoTitle.textContent = videoData[videoIndex].title || 'Untitled';
+                    videoDescription.textContent = videoData[videoIndex].description || 'No description available';
+
+                    // Update playing class
+                    updatePlayingClass(videoIndex);
+
+                    // Play the newly loaded video
+                    videoPlayer.play();
                 });
             });
 
-            // Implement smooth scrolling for the playlist based on mouse position
+            // Implement smooth scrolling for the playlist
             const videoPlaylistWrapper = document.querySelector('.video-playlist-wrapper');
             let isMouseOver = false;
             let scrollAmount = 0;
@@ -188,42 +321,25 @@ if ($hasValidVideo) : ?>
                 }
             });
 
-            // Fetch and display video durations reliably
-           /*videoItems.forEach((item, index) => {
+            // Fetch and display video durations
+            videoItems.forEach((item, index) => {
                 const videoUrl = item.querySelector('.video-link').getAttribute('data-url');
-                if (videoUrl) { // Only proceed if there's a valid URL
-                    const videoElement = document.createElement('video');
-                    videoElement.src = videoUrl;
-
-                    // Load metadata and get duration
-                    videoElement.addEventListener('loadedmetadata', function () {
-                        const duration = formatTime(videoElement.duration);
-                        document.getElementById(`duration-${index}`).textContent = duration;
-                    });
-
-                    // Error handling in case metadata cannot be loaded
-                    videoElement.addEventListener('error', function () {
-                        console.warn(`Could not load metadata for video at ${videoUrl}`);
-                        document.getElementById(`duration-${index}`).textContent = 'N/A';
-                    });
-                } else {
-                    document.getElementById(`duration-${index}`).textContent = 'N/A';
-                }
+                const videoElement = document.createElement('video');
+                videoElement.src = videoUrl;
+                videoElement.addEventListener('loadedmetadata', function () {
+                    const duration = formatTime(videoElement.duration);
+                    document.getElementById(`duration-${index}`).textContent = duration;
+                });
             });
 
             // Helper function to format the video time into mm:ss format
             function formatTime(seconds) {
-                if (isNaN(seconds) || seconds === Infinity) return 'N/A';
                 const mins = Math.floor(seconds / 60);
                 const secs = Math.floor(seconds % 60);
                 return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            }*/
-            
+            }
         });
-
     </script>
-
-
 <?php else : ?>
-    <p><?php //echo __('No course previews are available.'); ?></p>
+    <p><?php echo __('No course previews are available.'); ?></p>
 <?php endif; ?>

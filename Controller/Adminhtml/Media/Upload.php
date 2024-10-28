@@ -66,13 +66,9 @@ class Upload extends Action
 
                             // Return success response with file URL and name
                             return $this->jsonFactory->create()->setData([
-                                'success' => true,
-                                'file' => [
-                                    'name' => $fileName,
-                                    'url' => $this->_url->getBaseUrl(['_type' => \Magento\Framework\UrlInterface::URL_TYPE_MEDIA]) . 'course_videos/' . $fileName,
-                                    'size' => $fileArray['size'],
-                                    'type' => $fileArray['type']
-                                ]
+                                'name' => $fileName,
+                                'url' => $this->_url->getBaseUrl(['_type' => \Magento\Framework\UrlInterface::URL_TYPE_MEDIA]) . 'course_videos/' . $fileName,
+                                'size' => $fileArray['size']
                             ]);
                         } else {
                             throw new \Exception('Failed to move uploaded file.');

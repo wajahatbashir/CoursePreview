@@ -18,10 +18,10 @@ The **Course Preview** module is a custom Magento 2 module that allows you to up
 ## Screenshots
 
 ### Admin View
-![Admin View](https://github.com/wajahatbashir/wajahatbashir/blob/main/images/admin-product-custom-fields-form.jpg)
+![Admin View](https://github.com/wajahatbashir/wajahatbashir/blob/main/images/preview-course-backend.jpg)
 
 ### Frontend View
-![Frontend View](https://github.com/wajahatbashir/wajahatbashir/blob/main/images/Product-details-page-preview.jpg)
+![Frontend View](https://github.com/wajahatbashir/wajahatbashir/blob/main/images/preview-course-frontend.jpg)
 
 ## Installation
 
